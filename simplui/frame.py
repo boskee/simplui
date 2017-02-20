@@ -45,7 +45,18 @@ class Frame(Container):
 		
 		Keyword arguments:
 		children -- list of child elements to be added to this container
+		scaleW -- the virtual width that the gui is scaled from, defaults to w
+		scaleH -- the virtual height that the gui is scaled from,defaults to h
+		
 		"""
+		
+		gl.glEnable(gl.GL_SCISSOR_TEST)
+
+		# internal class vars for scaling
+		self._WIDTH = kwargs.get('scaleW', kwargs.get('w', 0))
+		self._HEIGHT = kwargs.get('scaleH', kwargs.get('h', 0))
+		self._sx, self._sy, self._ox, self._oy = 0,0,0,0
+
 		Container.__init__(self, **kwargs)
 		
 		self.names = {}
@@ -55,6 +66,7 @@ class Frame(Container):
 	
 	def _get_theme(self):
 		return self._theme
+
 	def _set_theme(self, theme):
 		self.update_theme(theme)
 		self.update_batch(pyglet.graphics.Batch(), None)
@@ -63,7 +75,6 @@ class Frame(Container):
 	
 	def update_batch(self, batch, group):
 		self._batch, self._group = batch, group
-		
 		count = len(self.children)
 		for c, i in zip(self.children, range(count-1, -1, -1)):
 			order = pyglet.graphics.OrderedGroup(i, group)
@@ -71,18 +82,41 @@ class Frame(Container):
 		
 	def add(self, child):
 		Container.add(self, child)
-		
 		self.update_batch(pyglet.graphics.Batch(), self._group)
 	
 	def remove(self, child):
-		Container.remove(self, child)
-		
+		Container.remove(self, child)	
 		self.update_batch(pyglet.graphics.Batch(), self._group)
 	
 	def get_element_by_name(self, name):
 		return self.names[name]
-	
+
+	def on_resize(self, w, h):
+		newW = float(w) # cast to avoid odd div zero issue!
+		newH = float(h)
+		if w/16.0<=h/9.0:
+			newH = (w/16.0) * 9.0
+		else:
+			newW = (h/9.0) * 16.0
+		self._sx = newW / self._WIDTH
+		self._sy = newH / self._HEIGHT
+		self._ox = -((newW-w)/2.0) / self._sx
+		self._oy = -((newH-h)/2.0) / self._sy
+
+		gl.glLoadIdentity()
+		gl.glScalef(self._sx,self._sy,1)
+		gl.glTranslatef(self._ox,self._oy,0)
+		gl.glScissor(int(self._ox*self._sx), int(self._oy*self._sy),
+					int((self._WIDTH)*self._sx), int((self._HEIGHT)*self._sy))
+
+	# internal use (probably not useful as part of the API)
+	def _scale_coords(self, x, y):
+		x = (x / self._sx) - self._ox
+		y = (y / self._sy) - self._oy
+		return (int(x), int(y))
+		
 	def on_mouse_press(self, x, y, button, modifiers):
+		x,y = self._scale_coords(x,y)
 		if len(self.focus) > 0:
 			return self.focus[-1].on_mouse_press(x, y, button, modifiers)
 		
@@ -98,11 +132,13 @@ class Frame(Container):
 				return
 	
 	def on_mouse_drag(self, x, y, dx, dy, button, modifiers):
+		x,y = self._scale_coords(x,y)
 		if len(self.focus) > 0:
 			return self.focus[-1].on_mouse_drag(x, y, dx, dy, button, modifiers)
 		return Container.on_mouse_drag(self, x, y, dx, dy, button, modifiers)
 	
 	def on_mouse_release(self, x, y, button, modifiers):
+		x,y = self._scale_coords(x,y)
 		if len(self.focus) > 0:
 			return self.focus[-1].on_mouse_release(x, y, button, modifiers)
 		return Container.on_mouse_release(self, x, y, button, modifiers)
