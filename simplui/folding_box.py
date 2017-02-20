@@ -55,7 +55,6 @@ class FoldingBox(SingleContainer):
 		
 		self.content = kwargs.get('content', None)
 		
-		self._last_h = 15
 		self._collapsed = False
 		
 		self._top_h = 0
@@ -73,11 +72,11 @@ class FoldingBox(SingleContainer):
 	def _set_collapsed(self, collapsed):
 		if collapsed != self._collapsed:
 			self._collapsed = collapsed
-			self._h, self._last_h = self._last_h, self._h
 			for c in self.children:
 				c.visible = not collapsed
 			if self.theme:
 				self.shapes['topbar'].patch = self.theme['folding_box'][('image_closed' if collapsed else 'image')]
+			self.find_root().update_batch(pyglet.graphics.Batch(), None)
 			self.find_root().update_layout()
 	collapsed = property(_get_collapsed, _set_collapsed)
 	
@@ -92,11 +91,7 @@ class FoldingBox(SingleContainer):
 			self.elements['title'].font_size = theme['font_size_small']
 			self.elements['title'].color = theme['font_color']
 			
-			if self._collapsed:
-				self._h = patch.padding_top
-			else:
-				self._last_h = patch.padding_top
-			
+
 			self._top_h = patch.padding_top
 	
 	def update_elements(self):		
