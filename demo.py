@@ -12,7 +12,7 @@ from simplui import *
 window = pyglet.window.Window(800, 600, caption='gui demo', vsync=False)
 
 # load some gui themes
-themes = [Theme('themes/macos'), Theme('themes/pywidget')]
+themes = [Theme('themes/macos'), Theme('themes/pywidget'), Theme('themes/rpg')]
 theme = 0
 
 # create a frame to contain our gui, the full size of our window
