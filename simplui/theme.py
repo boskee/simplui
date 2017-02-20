@@ -49,7 +49,8 @@ class Theme(dict):
 		loader = pyglet.resource.Loader(path=arg)
 		
 		input = json.loads( loader.file('theme.json').read() )
-		
+		if 'font_path' in input:
+			pyglet.font.add_file( input['font_path'] )		
 		image = loader.texture( input['image'] )
 		
 		for k, v in input.iteritems():

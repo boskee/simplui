@@ -8,15 +8,22 @@ pyglet.options['debug_gl'] = False
 # and import out gui toolkit
 from simplui import *
 
+# this is the "virtual" resolution the gu is rendered to
+# it then scales into the maximum sized the window will
+# allow while retaining a 16:9 aspect ratio
+WIDTH = 1280
+HEIGHT = 720
+
 # create a basic pyglet window
-window = pyglet.window.Window(800, 600, caption='gui demo', vsync=False)
+window = pyglet.window.Window(WIDTH, HEIGHT, caption='gui demo', vsync=False, resizable=True)
+
 
 # load some gui themes
-themes = [Theme('themes/macos'), Theme('themes/pywidget')]
+themes = [Theme('themes/macos'), Theme('themes/pywidget'), Theme('themes/rpg')]
 theme = 0
 
 # create a frame to contain our gui, the full size of our window
-frame = Frame(themes[theme], w=800, h=600)
+frame = Frame(themes[theme], w=WIDTH, h=HEIGHT)
 # let the frame recieve events from the window
 window.push_handlers(frame)
 
